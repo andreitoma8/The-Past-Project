@@ -3,9 +3,10 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract StakingToken is ReentrancyGuard {
+contract StakingToken is ReentrancyGuard, Ownable {
     // Address and Interface to the $PAST Token
     IERC20 public pastToken;
 
@@ -20,6 +21,8 @@ contract StakingToken is ReentrancyGuard {
         uint256 unclaimedRewards;
         // The timestamp since user has more than 1 billion tokens staked
         uint256 timeStakedForReward;
+        // Cooldown time
+        uint256 cooldown;
     }
 
     // Rewards per hour. A fraction calculated as x/10.000.000 to get the percentage
@@ -51,6 +54,10 @@ contract StakingToken is ReentrancyGuard {
         require(
             pastToken.balanceOf(msg.sender) >= _amount,
             "Can't stake more than you own"
+        );
+        require(
+            block.timestamp >= stakers[msg.sender].cooldown,
+            "Your cooldown is still active!"
         );
         if (stakers[msg.sender].deposited == 0) {
             stakers[msg.sender].deposited = _amount;
@@ -115,6 +122,7 @@ contract StakingToken is ReentrancyGuard {
             stakers[msg.sender].timeOfLastUpdate = block.timestamp;
         }
         stakers[msg.sender].unclaimedRewards = _rewards;
+        stakers[msg.sender].cooldown = block.timestamp + compoundFreq;
         if (stakers[msg.sender].deposited < minStakeForReward) {
             stakers[msg.sender].timeStakedForReward = 0;
         }
@@ -131,6 +139,7 @@ contract StakingToken is ReentrancyGuard {
         stakers[msg.sender].timeOfLastUpdate = 0;
         uint256 _amount = _rewards + _deposit;
         stakers[msg.sender].timeStakedForReward = 0;
+        stakers[msg.sender].cooldown = block.timestamp + compoundFreq;
         pastToken.transferFrom(address(this), msg.sender, _amount);
     }
 
@@ -180,5 +189,15 @@ contract StakingToken is ReentrancyGuard {
                 stakers[_staker].deposited) * rewardsPerHour) / 3600) /
                 10000000);
         }
+    }
+
+    ///////////
+    // Owner //
+    ///////////
+
+    // Function for owner to withdraw tokens if too much is sent for
+    // staking SC or tokens are not claimed.
+    function withdrawPast(uint256 _amount) external onlyOwner {
+        pastToken.transfer(msg.sender, _amount);
     }
 }
