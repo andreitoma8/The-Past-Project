@@ -5,10 +5,12 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract StakingToken is ReentrancyGuard, Ownable {
-    // Address and Interface to the $PAST Token
+    // Address and Interface to the $PAST Token and NFT Collection
     IERC20 public pastToken;
+    IERC721 public immutable nftCollection;
 
     // Staker info
     struct Staker {
@@ -37,12 +39,16 @@ contract StakingToken is ReentrancyGuard, Ownable {
     // Compounding frequency limit in seconds
     uint256 public compoundFreq = 86400; //1 Day
 
+    // Token IDs for NFTs deposited in the SC as rewards for staking
+    uint256[] public rewardNfts;
+
     // Mapping of address to Staker info
     mapping(address => Staker) internal stakers;
 
     // Constructor function
-    constructor(IERC20 _pastToken) {
+    constructor(IERC20 _pastToken, IERC721 _nftCollection) {
         pastToken = _pastToken;
+        nftCollection = _nftCollection;
     }
 
     // If address has no Staker struct, initiate one. If address already was a stake,
@@ -143,6 +149,19 @@ contract StakingToken is ReentrancyGuard, Ownable {
         pastToken.transferFrom(address(this), msg.sender, _amount);
     }
 
+    // Claim a NFT if you staked 1 billion tokens more than 30 days.
+    function claimNftReward() external {
+        require(
+            hasOneBillionStaked(msg.sender),
+            "You can't claim any NFTs yet!"
+        );
+        require(rewardNfts.length > 0, "All NFTs were claimed.");
+        uint256 _tokenId = rewardNfts[rewardNfts.length - 1];
+        rewardNfts.pop();
+        nftCollection.transferFrom(address(this), msg.sender, _tokenId);
+        stakers[msg.sender].timeStakedForReward = block.timestamp;
+    }
+
     // Function useful for fron-end that returns user stake and rewards by address
     function getDepositInfo(address _user)
         public
@@ -157,7 +176,7 @@ contract StakingToken is ReentrancyGuard, Ownable {
     }
 
     // Function to check if user has staked more than 1 billion tokens in the last 30 days
-    function hasOneBillionStaked(address _user) external view returns (bool) {
+    function hasOneBillionStaked(address _user) public view returns (bool) {
         return (stakers[_user].timeStakedForReward + 2592000 > block.timestamp);
     }
 
@@ -194,6 +213,14 @@ contract StakingToken is ReentrancyGuard, Ownable {
     ///////////
     // Owner //
     ///////////
+
+    // Deposit NFTs as rewards for stakers to claim
+    function depositNftRewards(uint256[] calldata _tokenIds) external {
+        for (uint256 i; i < _tokenIds.length; i++) {
+            nftCollection.transferFrom(msg.sender, address(this), _tokenIds[i]);
+            rewardNfts.push(_tokenIds[i]);
+        }
+    }
 
     // Function for owner to withdraw tokens if too much is sent for
     // staking SC or tokens are not claimed.

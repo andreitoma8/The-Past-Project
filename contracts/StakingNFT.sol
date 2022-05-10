@@ -159,10 +159,6 @@ contract StakingNFT is Ownable, ReentrancyGuard {
     }
 
     function availableRewards(address _user) internal view returns (uint256) {
-        require(
-            stakers[_user].amountOfColorsStaked > 0,
-            "User has no tokens staked"
-        );
         uint256 _rewards = stakers[_user].unclaimedRewards +
             calculateRewards(_user);
         return _rewards;
