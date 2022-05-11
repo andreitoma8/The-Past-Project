@@ -11,7 +11,11 @@ contract ThePastNFT is ERC721, ERC721Enumerable, Ownable {
 
     Counters.Counter private _tokenIdCounter;
 
-    constructor() ERC721("The Past NFT", "PAST") {}
+    constructor() ERC721("The Past NFT", "PAST") {
+        for (uint256 i; i < 10; i++) {
+            safeMint(msg.sender);
+        }
+    }
 
     function safeMint(address to) public onlyOwner {
         uint256 tokenId = _tokenIdCounter.current();

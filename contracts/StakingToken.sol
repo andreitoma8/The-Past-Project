@@ -28,7 +28,7 @@ contract StakingToken is ReentrancyGuard, Ownable {
     }
 
     // Rewards per hour. A fraction calculated as x/10.000.000 to get the percentage
-    uint256 public rewardsPerHour = 246; // 0.00274%/h or 21.56% APR or 24% APY with daily compounding.
+    uint256 public rewardsPerHour = 246; // 0.00246%/h or 21.56% APR or 24% APY with daily compounding.
 
     // Minimum amount to stake
     uint256 public minStake = 10 * 10**9;
@@ -111,7 +111,7 @@ contract StakingToken is ReentrancyGuard, Ownable {
         require(rewards > 0, "You have no rewards");
         stakers[msg.sender].unclaimedRewards = 0;
         stakers[msg.sender].timeOfLastUpdate = block.timestamp;
-        pastToken.transferFrom(address(this), msg.sender, rewards);
+        pastToken.transfer(msg.sender, rewards);
     }
 
     // Withdraw specified amount of staked tokens
@@ -132,7 +132,7 @@ contract StakingToken is ReentrancyGuard, Ownable {
         if (stakers[msg.sender].deposited < minStakeForReward) {
             stakers[msg.sender].timeStakedForReward = 0;
         }
-        pastToken.transferFrom(address(this), msg.sender, _amount);
+        pastToken.transfer(msg.sender, _amount);
     }
 
     // Withdraw all stake and rewards and mints them to the msg.sender
@@ -146,7 +146,7 @@ contract StakingToken is ReentrancyGuard, Ownable {
         uint256 _amount = _rewards + _deposit;
         stakers[msg.sender].timeStakedForReward = 0;
         stakers[msg.sender].cooldown = block.timestamp + compoundFreq;
-        pastToken.transferFrom(address(this), msg.sender, _amount);
+        pastToken.transfer(msg.sender, _amount);
     }
 
     // Claim a NFT if you staked 1 billion tokens more than 30 days.
@@ -169,15 +169,15 @@ contract StakingToken is ReentrancyGuard, Ownable {
         returns (uint256 _stake, uint256 _rewards)
     {
         _stake = stakers[_user].deposited;
-        _rewards =
-            calculateRewards(_user) +
-            stakers[msg.sender].unclaimedRewards;
+        _rewards = calculateRewards(_user) + stakers[_user].unclaimedRewards;
         return (_stake, _rewards);
     }
 
     // Function to check if user has staked more than 1 billion tokens in the last 30 days
     function hasOneBillionStaked(address _user) public view returns (bool) {
-        return (stakers[_user].timeStakedForReward + 2592000 > block.timestamp);
+        bool bl = ((stakers[_user].timeStakedForReward + 2592000) <=
+            block.timestamp);
+        return bl;
     }
 
     // Utility function that returns the timer for restaking rewards
