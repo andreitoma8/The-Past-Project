@@ -153,7 +153,7 @@ contract StakingNFT is Ownable, ReentrancyGuard {
     function userStakeInfo(address _user)
         public
         view
-        returns (uint256 _tokensStaked, uint256 _availableRewards)
+        returns (uint256 _colorsStaked, uint256 _availableRewards)
     {
         return (stakers[_user].amountOfColorsStaked, availableRewards(_user));
     }
@@ -162,6 +162,25 @@ contract StakingNFT is Ownable, ReentrancyGuard {
         uint256 _rewards = stakers[_user].unclaimedRewards +
             calculateRewards(_user);
         return _rewards;
+    }
+
+    // Returns array of Token IDs of NFTs staked by _user
+    function tokensStakedByUser(address _user)
+        external
+        view
+        returns (uint256[] memory)
+    {
+        uint256[] memory tokensOwned = new uint256[](
+            stakers[_user].amountOfColorsStaked
+        );
+        uint256 index;
+        for (uint256 i; i < 3334; ++i) {
+            if (stakerAddress[i] == _user) {
+                tokensOwned[index] = i;
+                index++;
+            }
+        }
+        return tokensOwned;
     }
 
     /////////////
@@ -176,7 +195,7 @@ contract StakingNFT is Ownable, ReentrancyGuard {
         view
         returns (uint256 _rewards)
     {
-        if (stakers[_staker].amountOfColorsStaked == 0) {
+        if (stakers[_staker].amountOfColorsStaked < 3) {
             return 0;
         }
         uint256 multiplierForStaker;

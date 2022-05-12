@@ -12,15 +12,15 @@ contract ThePastNFT is ERC721, ERC721Enumerable, Ownable {
     Counters.Counter private _tokenIdCounter;
 
     constructor() ERC721("The Past NFT", "PAST") {
-        for (uint256 i; i < 10; i++) {
-            safeMint(msg.sender);
-        }
+        safeMint(10);
     }
 
-    function safeMint(address to) public onlyOwner {
-        uint256 tokenId = _tokenIdCounter.current();
-        _tokenIdCounter.increment();
-        _safeMint(to, tokenId);
+    function safeMint(uint256 _amount) public onlyOwner {
+        for (uint256 i; i < _amount; ++i) {
+            uint256 tokenId = _tokenIdCounter.current();
+            _tokenIdCounter.increment();
+            _safeMint(msg.sender, tokenId);
+        }
     }
 
     // The following functions are overrides required by Solidity.
