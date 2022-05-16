@@ -31,13 +31,16 @@ contract StakingToken is ReentrancyGuard, Ownable {
     uint256 public rewardsPerHour = 246; // 0.00246%/h or 21.56% APR or 24% APY with daily compounding.
 
     // Minimum amount to stake
-    uint256 public minStake = 10 * 10**9;
+    uint256 public minStake = 100 * 10**9;
 
     // Minimum stake to get rewards(1 billion)
     uint256 public minStakeForReward = 1000000000 * 10**9;
 
     // Compounding frequency limit in seconds
     uint256 public compoundFreq = 86400; //1 Day
+
+    // PAST deposited for rewards
+    uint256 public pastDepositedForRewards;
 
     // Token IDs for NFTs deposited in the SC as rewards for staking
     uint256[] public rewardNfts;
@@ -215,16 +218,26 @@ contract StakingToken is ReentrancyGuard, Ownable {
     ///////////
 
     // Deposit NFTs as rewards for stakers to claim
-    function depositNftRewards(uint256[] calldata _tokenIds) external {
+    function depositNftRewards(uint256[] calldata _tokenIds)
+        external
+        onlyOwner
+    {
         for (uint256 i; i < _tokenIds.length; i++) {
             nftCollection.transferFrom(msg.sender, address(this), _tokenIds[i]);
             rewardNfts.push(_tokenIds[i]);
         }
     }
 
+    // Deposit PAST for rewards in the Smart Contract
+    function depositPast(uint256 _amount) external onlyOwner {
+        pastDepositedForRewards += _amount;
+        pastToken.transferFrom(msg.sender, address(this), _amount);
+    }
+
     // Function for owner to withdraw tokens if too much is sent for
     // staking SC or tokens are not claimed.
     function withdrawPast(uint256 _amount) external onlyOwner {
+        require(_amount <= pastDepositedForRewards);
         pastToken.transfer(msg.sender, _amount);
     }
 }

@@ -38,14 +38,16 @@ def test_main():
     chain.mine(blocks=10, timedelta=86400)
     # Assert rewards for 3 colours
     user_info_3 = staking.userStakeInfo(owner.address)
-    assert user_info_3[0] == 3 and user_info_3[1] >= 161150
+    assert user_info_3[0] == 3 and user_info_3[1] >= 161150 * 10 ** 9
     # Stake 5 colours
     staking.stake(1003, 3, {"from": owner})
     staking.stake(1300, 4, {"from": owner})
     chain.mine(blocks=10, timedelta=86400)
     # Assert rewards for 5 colours
     user_info_4 = staking.userStakeInfo(owner.address)
-    assert user_info_4[0] == 5 and user_info_4[1] >= user_info_3[1] + 161150 * 2
+    assert (
+        user_info_4[0] == 5 and user_info_4[1] >= user_info_3[1] + 161150 * 10 ** 9 * 2
+    )
     print(user_info_4[1])
     # Stake 7 colours
     staking.stake(1600, 5, {"from": owner})
@@ -53,7 +55,9 @@ def test_main():
     chain.mine(blocks=10, timedelta=86400)
     # Assert rewards for 7 colours
     user_info_5 = staking.userStakeInfo(owner.address)
-    assert user_info_5[0] == 7 and user_info_5[1] >= user_info_4[1] + 161150 * 3
+    assert (
+        user_info_5[0] == 7 and user_info_5[1] >= user_info_4[1] + 161150 * 10 ** 9 * 4
+    )
     print(user_info_5[1])
     # Stake 11 colours
     staking.stake(2200, 7, {"from": owner})
@@ -63,7 +67,10 @@ def test_main():
     chain.mine(blocks=10, timedelta=86400)
     # Assert rewards for 11 colours
     user_info_6 = staking.userStakeInfo(owner.address)
-    assert user_info_6[0] == 11 and user_info_6[1] >= user_info_5[1] + 161150 * 4
+    assert (
+        user_info_6[0] == 11
+        and user_info_6[1] >= user_info_5[1] + 161150 * 10 ** 9 * 10
+    )
     print(user_info_6[1])
     assert staking.tokensStakedByUser(owner.address) == [
         1,
@@ -79,7 +86,7 @@ def test_main():
         3100,
     ]
     # Send Past to Staking SC
-    token.transfer(staking.address, 10000 * 10 ** 9, {"from": owner})
+    token.transfer(staking.address, 1000000000 * 10 ** 9, {"from": owner})
     # Exclude staking SC from fee
     token.excludeFromFee(staking.address, {"from": owner})
     # Assert withdraw rewards

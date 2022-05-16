@@ -75,10 +75,17 @@ contract StakingNFT is Ownable, ReentrancyGuard {
     // Mapping of staker to colors staked
     mapping(address => mapping(uint256 => bool)) public colorsStaked;
 
+    // Mapping of NFTs staked to token allocation
+    mapping(uint256 => uint256) public tokenAllocation;
+
     // Constructor function
     constructor(IERC721 _nftCollection, IERC20 _rewardsToken) {
         nftCollection = _nftCollection;
         rewardsToken = _rewardsToken;
+        tokenAllocation[3] = 161150 * 10**9;
+        tokenAllocation[5] = 322300 * 10**9;
+        tokenAllocation[7] = 644600 * 10**9;
+        tokenAllocation[11] = 1611500 * 10**9;
     }
 
     // Stake function. Pass the Token ID of the NFT and the Color of the NFT
@@ -137,7 +144,7 @@ contract StakingNFT is Ownable, ReentrancyGuard {
     // Calculate rewards for the msg.sender, check if there are any rewards
     // claim, set unclaimedRewards to 0 and transfer the ERC20 Reward token
     // to the user.
-    function claimRewards() external {
+    function claimRewards() external nonReentrant {
         uint256 rewards = calculateRewards(msg.sender) +
             stakers[msg.sender].unclaimedRewards;
         require(rewards > 0, "You have no rewards to claim");
@@ -198,16 +205,14 @@ contract StakingNFT is Ownable, ReentrancyGuard {
         if (stakers[_staker].amountOfColorsStaked < 3) {
             return 0;
         }
-        uint256 multiplierForStaker;
+        uint256 allocationIndex;
         for (uint256 i; i < 4; i++) {
             if (stakers[_staker].amountOfColorsStaked >= rewardsThreshold[i]) {
-                multiplierForStaker += 1;
+                allocationIndex += 1;
             }
         }
-        _rewards = (((
-            ((block.timestamp - stakers[_staker].timeOfLastUpdate) *
-                multiplierForStaker)
-        ) * rewardsPerDay) / 86400);
+        _rewards = ((((block.timestamp - stakers[_staker].timeOfLastUpdate)) *
+            tokenAllocation[rewardsThreshold[allocationIndex - 1]]) / 86400);
     }
 
     ///////////
