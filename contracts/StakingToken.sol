@@ -43,7 +43,7 @@ contract StakingToken is ReentrancyGuard, Ownable {
     uint256 public pastDepositedForRewards;
 
     // Token IDs for NFTs deposited in the SC as rewards for staking
-    uint256[] public rewardNfts;
+    uint256[] private rewardNfts;
 
     // Mapping of address to Staker info
     mapping(address => Staker) internal stakers;
