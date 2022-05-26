@@ -88,7 +88,7 @@ contract GemsCollection is ERC721Enumerable, ERC2981, Ownable, PaymentSplitter {
         address[] calldata addresses
     ) external onlyOwner {
         require(
-            totalSupply().add(ids.length) <= MAX_TOKENS,
+            totalSupply() + ids.length <= MAX_TOKENS,
             "Purchase would exceed max supply of tokens."
         );
         for (uint256 i = 0; i < ids.length; i++) {
