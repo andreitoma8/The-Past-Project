@@ -93,7 +93,7 @@ contract StakingNFT is Ownable, ReentrancyGuard {
     // increment the amount of colors stked and map msg.sender to the Token Id of the staked
     // Token to later send back on withdrawal. Finally give timeOfLastUpdate the
     // value of now and set the color as already staked by the user.
-    function stake(uint256 _tokenId, uint256 _color) external nonReentrant {
+    function stake(uint256 _tokenId, uint256 _color) public nonReentrant {
         require(_color < 11, "Color out of index!");
         require(!colorsStaked[msg.sender][_color], "Color already staked!");
         require(
@@ -114,6 +114,15 @@ contract StakingNFT is Ownable, ReentrancyGuard {
         stakers[msg.sender].amountOfColorsStaked += 1;
         stakers[msg.sender].timeOfLastUpdate = block.timestamp;
         colorsStaked[msg.sender][_color] = true;
+    }
+
+    // Function to stake multiple gems in the same transaction
+    function stakeMultiple(uint256[] memory _tokenIds, uint256[] memory _colors)
+        external
+    {
+        for (uint256 i; i < _tokenIds.length; ++i) {
+            stake(_tokenIds[i], _colors[i]);
+        }
     }
 
     // Check if user has any  Tokens Staked, if color is in range and if the correct one
