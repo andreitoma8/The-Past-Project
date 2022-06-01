@@ -121,6 +121,7 @@ contract StakingNFT is Ownable, ReentrancyGuard {
         uint256[] calldata _tokenIds,
         uint256[] calldata _colors
     ) external {
+        require(_tokenIds.length > 0);
         for (uint256 i; i < _tokenIds.length; ++i) {
             stake(_tokenIds[i], _colors[i]);
         }
@@ -156,6 +157,7 @@ contract StakingNFT is Ownable, ReentrancyGuard {
         uint256[] calldata _tokenIds,
         uint256[] calldata _colors
     ) external {
+        require(_tokenIds.length > 0);
         for (uint256 i; i < _tokenIds.length; ++i) {
             withdraw(_tokenIds[i], _colors[i]);
         }
