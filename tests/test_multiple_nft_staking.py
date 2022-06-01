@@ -19,3 +19,6 @@ def test_main():
     staking.stakeMultiple([1, 311], [0, 1], {"from": owner})
     user_info_1 = staking.userStakeInfo(owner.address)
     assert user_info_1[0] == 2 and user_info_1[1] == 0
+    staking.withdrawMultiple([311, 1], [1, 0], {"from": owner})
+    user_info_2 = staking.userStakeInfo(owner.address)
+    assert user_info_2[0] == 0 and user_info_1[1] == 0

@@ -116,10 +116,11 @@ contract StakingNFT is Ownable, ReentrancyGuard {
         colorsStaked[msg.sender][_color] = true;
     }
 
-    // Function to stake multiple gems in the same transaction
-    function stakeMultiple(uint256[] memory _tokenIds, uint256[] memory _colors)
-        external
-    {
+    // Function for staking multiple gems in the same transaction
+    function stakeMultiple(
+        uint256[] calldata _tokenIds,
+        uint256[] calldata _colors
+    ) external {
         for (uint256 i; i < _tokenIds.length; ++i) {
             stake(_tokenIds[i], _colors[i]);
         }
@@ -129,7 +130,7 @@ contract StakingNFT is Ownable, ReentrancyGuard {
     // is selected. Calculate the rewards and store them in the unclaimedRewards and for each
     // ERC721 Token in param: check if msg.sender is the original staker, decrement
     // the amount of colors staked for user and transfer the token back to them.
-    function withdraw(uint256 _tokenId, uint256 _color) external nonReentrant {
+    function withdraw(uint256 _tokenId, uint256 _color) public nonReentrant {
         require(
             stakers[msg.sender].amountOfColorsStaked > 0,
             "You have no tokens staked"
@@ -148,6 +149,16 @@ contract StakingNFT is Ownable, ReentrancyGuard {
         stakers[msg.sender].amountOfColorsStaked -= 1;
         stakers[msg.sender].timeOfLastUpdate = block.timestamp;
         colorsStaked[msg.sender][_color] = false;
+    }
+
+    // Function for withdrawing multiple gems in the same transaction
+    function withdrawMultiple(
+        uint256[] calldata _tokenIds,
+        uint256[] calldata _colors
+    ) external {
+        for (uint256 i; i < _tokenIds.length; ++i) {
+            withdraw(_tokenIds[i], _colors[i]);
+        }
     }
 
     // Calculate rewards for the msg.sender, check if there are any rewards
