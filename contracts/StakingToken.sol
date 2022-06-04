@@ -115,6 +115,7 @@ contract StakingToken is ReentrancyGuard, Ownable {
         stakers[msg.sender].unclaimedRewards = 0;
         stakers[msg.sender].timeOfLastUpdate = block.timestamp;
         pastToken.transfer(msg.sender, rewards);
+        stakers[msg.sender].cooldown = block.timestamp + compoundFreq;
     }
 
     // Withdraw specified amount of staked tokens
@@ -169,11 +170,20 @@ contract StakingToken is ReentrancyGuard, Ownable {
     function getDepositInfo(address _user)
         public
         view
-        returns (uint256 _stake, uint256 _rewards)
+        returns (
+            uint256 _stake,
+            uint256 _rewards,
+            uint256 _cooldownTimer
+        )
     {
         _stake = stakers[_user].deposited;
+        if (stakers[_user].cooldown <= block.timestamp) {
+            _cooldownTimer = 0;
+        } else {
+            _cooldownTimer = stakers[_user].cooldown - block.timestamp;
+        }
         _rewards = calculateRewards(_user) + stakers[_user].unclaimedRewards;
-        return (_stake, _rewards);
+        return (_stake, _rewards, _cooldownTimer);
     }
 
     // Function to check if user has staked more than 1 billion tokens in the last 30 days
@@ -226,6 +236,14 @@ contract StakingToken is ReentrancyGuard, Ownable {
             nftCollection.transferFrom(msg.sender, address(this), _tokenIds[i]);
             rewardNfts.push(_tokenIds[i]);
         }
+    }
+
+    function setMinStakeForRewards(uint256 _newValue) external onlyOwner {
+        minStakeForReward = _newValue;
+    }
+
+    function setMinStake(uint256 _newValue) external onlyOwner {
+        minStake = _newValue;
     }
 
     // Deposit PAST for rewards in the Smart Contract
